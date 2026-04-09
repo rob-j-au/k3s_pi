@@ -36,10 +36,10 @@ spec:
           mountPath: /loki
         resources:
           requests:
-            cpu: 200m
+            cpu: 50m
             memory: 256Mi
           limits:
-            cpu: 500m
+            cpu: 200m
             memory: 512Mi
         livenessProbe:
           httpGet:
@@ -60,7 +60,7 @@ spec:
           type: Directory
       - name: data
         hostPath:
-          path: /k8s-volumes/loki
+          path: /kubernetes-volumes/loki
           type: DirectoryOrCreate
 ---
 apiVersion: v1

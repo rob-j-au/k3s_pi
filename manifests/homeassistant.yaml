@@ -26,6 +26,10 @@ spec:
         env:
         - name: DISABLE_JEMALLOC
           value: "true"
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/bin/sh", "-c", "rm -f /config/.ha_run.lock"]
         volumeMounts:
         - name: config
           mountPath: /config
@@ -39,15 +43,18 @@ spec:
           mountPath: /dev/ttyACM0
         - name: zigbee-serial
           mountPath: /dev/serial/by-id/usb-ITEAD_SONOFF_Zigbee_3.0_USB_Dongle_Plus_V2_20231220114438-if00
+        - name: scripts
+          mountPath: /opt/scripts
+          readOnly: true
         securityContext:
           privileged: true
         resources:
           requests:
-            cpu: 500m
-            memory: 1024Mi
+            cpu: 100m
+            memory: 768Mi
           limits:
-            cpu: 1000m
-            memory: 1024Mi
+            cpu: 500m
+            memory: 1Gi
         livenessProbe:
           httpGet:
             path: /
@@ -63,7 +70,7 @@ spec:
       volumes:
       - name: config
         hostPath:
-          path: /k8s-volumes/homeassistant
+          path: /kubernetes-volumes/homeassistant
           type: DirectoryOrCreate
       - name: localtime
         hostPath:
@@ -81,6 +88,10 @@ spec:
         hostPath:
           path: /dev/serial/by-id/usb-ITEAD_SONOFF_Zigbee_3.0_USB_Dongle_Plus_V2_20231220114438-if00
           type: CharDevice
+      - name: scripts
+        hostPath:
+          path: /opt/scripts
+          type: Directory
 ---
 apiVersion: v1
 kind: Service
