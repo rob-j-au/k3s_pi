@@ -39,10 +39,10 @@ spec:
           readOnly: true
         resources:
           requests:
-            cpu: 50m
+            cpu: 100m
             memory: 256Mi
           limits:
-            cpu: 200m
+            cpu: "1"
             memory: 384Mi
       volumes:
       - name: config

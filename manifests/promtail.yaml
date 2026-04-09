@@ -15,6 +15,7 @@ spec:
       labels:
         app: promtail
     spec:
+      serviceAccountName: promtail
       hostNetwork: true
       containers:
       - name: promtail
@@ -32,15 +33,18 @@ spec:
           readOnly: true
         - name: docker-sock
           mountPath: /var/run/docker.sock
-        - name: docker-containers
-          mountPath: /var/lib/docker/containers
+        - name: pods
+          mountPath: /var/log/pods
+          readOnly: true
+        - name: containers
+          mountPath: /docker-volumes/containers
           readOnly: true
         resources:
           requests:
             cpu: 100m
             memory: 256Mi
           limits:
-            cpu: 300m
+            cpu: "1"
             memory: 512Mi
         livenessProbe:
           httpGet:
@@ -63,9 +67,13 @@ spec:
         hostPath:
           path: /var/run/docker.sock
           type: Socket
-      - name: docker-containers
+      - name: pods
         hostPath:
-          path: /var/lib/docker/containers
+          path: /var/log/pods
+          type: Directory
+      - name: containers
+        hostPath:
+          path: /docker-volumes/containers
           type: Directory
 ---
 apiVersion: v1

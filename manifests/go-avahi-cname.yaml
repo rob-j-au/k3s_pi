@@ -18,19 +18,17 @@ spec:
       hostNetwork: true
       containers:
       - name: go-avahi-cname
-        image: ghcr.io/grishy/go-avahi-cname:2.6.1
+        image: ghcr.io/bjw-s/go-avahi-cname:latest
         imagePullPolicy: IfNotPresent
         volumeMounts:
         - name: dbus
           mountPath: /var/run/dbus
-        securityContext:
-          privileged: false
         resources:
           requests:
-            cpu: 50m
+            cpu: 100m
             memory: 64Mi
           limits:
-            cpu: 100m
+            cpu: "1"
             memory: 128Mi
       volumes:
       - name: dbus
