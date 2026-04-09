@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: promtail
+  namespace: pi-services
+  labels:
+    app: promtail
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: promtail
+  template:
+    metadata:
+      labels:
+        app: promtail
+    spec:
+      hostNetwork: true
+      containers:
+      - name: promtail
+        image: grafana/promtail:latest
+        imagePullPolicy: IfNotPresent
+        args:
+        - -config.file=/etc/promtail/promtail.yml
+        ports:
+        - containerPort: 9080
+          hostPort: 9080
+        volumeMounts:
+        - name: config
+          mountPath: /etc/promtail/promtail.yml
+          subPath: promtail.yml
+          readOnly: true
+        - name: docker-sock
+          mountPath: /var/run/docker.sock
+        - name: docker-containers
+          mountPath: /var/lib/docker/containers
+          readOnly: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 300m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /ready
+            port: 9080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 9080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+      volumes:
+      - name: config
+        hostPath:
+          path: /opt/k3s-config/promtail
+          type: Directory
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock
+          type: Socket
+      - name: docker-containers
+        hostPath:
+          path: /var/lib/docker/containers
+          type: Directory
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: promtail
+  namespace: pi-services
+spec:
+  type: ClusterIP
+  ports:
+  - port: 9080
+    targetPort: 9080
+  selector:
+    app: promtail

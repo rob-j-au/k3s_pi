@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: squid
+  namespace: pi-services
+  labels:
+    app: squid
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: squid
+  template:
+    metadata:
+      labels:
+        app: squid
+    spec:
+      hostNetwork: true
+      containers:
+      - name: squid
+        image: ubuntu/squid:latest
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          runAsUser: 0
+        ports:
+        - containerPort: 3128
+          hostPort: 3128
+        volumeMounts:
+        - name: config
+          mountPath: /etc/squid/squid.conf
+          subPath: squid.conf
+          readOnly: true
+        - name: cache
+          mountPath: /var/spool/squid
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 300m
+            memory: 256Mi
+        livenessProbe:
+          tcpSocket:
+            port: 3128
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          tcpSocket:
+            port: 3128
+          initialDelaySeconds: 10
+          periodSeconds: 10
+      volumes:
+      - name: config
+        hostPath:
+          path: /k8s-volumes/squid
+          type: Directory
+      - name: cache
+        hostPath:
+          path: /k8s-volumes/squid/cache
+          type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: squid
+  namespace: pi-services
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3128
+    targetPort: 3128
+  selector:
+    app: squid

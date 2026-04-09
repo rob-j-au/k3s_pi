@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: telegraf
+  namespace: pi-services
+  labels:
+    app: telegraf
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: telegraf
+  template:
+    metadata:
+      labels:
+        app: telegraf
+    spec:
+      hostNetwork: true
+      containers:
+      - name: telegraf
+        image: telegraf:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: HOST_PROC
+          value: /host/proc
+        - name: HOST_SYS
+          value: /host/sys
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: config
+          mountPath: /etc/telegraf
+          readOnly: true
+        - name: proc
+          mountPath: /host/proc
+          readOnly: true
+        - name: sys
+          mountPath: /host/sys
+          readOnly: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 384Mi
+          limits:
+            cpu: 300m
+            memory: 512Mi
+      volumes:
+      - name: config
+        hostPath:
+          path: /opt/k3s-config/telegraf
+          type: Directory
+      - name: proc
+        hostPath:
+          path: /proc
+          type: Directory
+      - name: sys
+        hostPath:
+          path: /sys
+          type: Directory

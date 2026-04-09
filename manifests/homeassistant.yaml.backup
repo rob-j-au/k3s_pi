@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homeassistant
+  namespace: pi-services
+  labels:
+    app: homeassistant
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: homeassistant
+  template:
+    metadata:
+      labels:
+        app: homeassistant
+    spec:
+      hostNetwork: true
+      containers:
+      - name: homeassistant
+        image: ghcr.io/home-assistant/home-assistant:stable
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8123
+          hostPort: 8123
+        env:
+        - name: DISABLE_JEMALLOC
+          value: "true"
+        volumeMounts:
+        - name: config
+          mountPath: /config
+        - name: localtime
+          mountPath: /etc/localtime
+          readOnly: true
+        - name: dbus
+          mountPath: /run/dbus
+          readOnly: true
+        - name: zigbee-dongle
+          mountPath: /dev/ttyACM0
+        - name: zigbee-serial
+          mountPath: /dev/serial/by-id/usb-ITEAD_SONOFF_Zigbee_3.0_USB_Dongle_Plus_V2_20231220114438-if00
+        securityContext:
+          privileged: true
+        resources:
+          requests:
+            cpu: 300m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 1024Mi
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8123
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8123
+          initialDelaySeconds: 30
+          periodSeconds: 10
+      volumes:
+      - name: config
+        hostPath:
+          path: /opt/nomad/volumes/homeassistant
+          type: DirectoryOrCreate
+      - name: localtime
+        hostPath:
+          path: /etc/localtime
+          type: File
+      - name: dbus
+        hostPath:
+          path: /run/dbus
+          type: Directory
+      - name: zigbee-dongle
+        hostPath:
+          path: /dev/ttyACM0
+          type: CharDevice
+      - name: zigbee-serial
+        hostPath:
+          path: /dev/serial/by-id/usb-ITEAD_SONOFF_Zigbee_3.0_USB_Dongle_Plus_V2_20231220114438-if00
+          type: CharDevice
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: homeassistant
+  namespace: pi-services
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8123
+    targetPort: 8123
+  selector:
+    app: homeassistant

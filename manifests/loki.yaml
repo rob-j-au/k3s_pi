@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loki
+  namespace: pi-services
+  labels:
+    app: loki
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loki
+  template:
+    metadata:
+      labels:
+        app: loki
+    spec:
+      hostNetwork: true
+      containers:
+      - name: loki
+        image: grafana/loki:latest
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          runAsUser: 0
+        args:
+        - -config.file=/etc/loki/loki-config.yml
+        ports:
+        - containerPort: 3100
+          hostPort: 3100
+        volumeMounts:
+        - name: config
+          mountPath: /etc/loki/loki-config.yml
+          subPath: loki-config.yml
+          readOnly: true
+        - name: data
+          mountPath: /loki
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /ready
+            port: 3100
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 3100
+          initialDelaySeconds: 10
+          periodSeconds: 10
+      volumes:
+      - name: config
+        hostPath:
+          path: /opt/k3s-config/loki
+          type: Directory
+      - name: data
+        hostPath:
+          path: /k8s-volumes/loki
+          type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki
+  namespace: pi-services
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3100
+    targetPort: 3100
+  selector:
+    app: loki

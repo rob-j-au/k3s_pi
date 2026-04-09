@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: go-avahi-cname
+  namespace: pi-services
+  labels:
+    app: go-avahi-cname
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: go-avahi-cname
+  template:
+    metadata:
+      labels:
+        app: go-avahi-cname
+    spec:
+      hostNetwork: true
+      containers:
+      - name: go-avahi-cname
+        image: ghcr.io/grishy/go-avahi-cname:2.6.1
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - name: dbus
+          mountPath: /var/run/dbus
+        securityContext:
+          privileged: false
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+      volumes:
+      - name: dbus
+        hostPath:
+          path: /var/run/dbus
+          type: Directory
