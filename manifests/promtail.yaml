@@ -15,7 +15,6 @@ spec:
       labels:
         app: promtail
     spec:
-      serviceAccountName: promtail
       hostNetwork: true
       containers:
       - name: promtail

@@ -18,7 +18,7 @@ spec:
       hostNetwork: true
       containers:
       - name: go-avahi-cname
-        image: ghcr.io/bjw-s/go-avahi-cname:latest
+        image: ghcr.io/grishy/go-avahi-cname:v2.0.3
         imagePullPolicy: IfNotPresent
         volumeMounts:
         - name: dbus

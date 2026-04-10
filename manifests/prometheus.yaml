@@ -24,6 +24,7 @@ spec:
         - --config.file=/etc/prometheus/prometheus.yml
         - --storage.tsdb.path=/prometheus
         - --web.listen-address=0.0.0.0:9090
+        - --storage.tsdb.retention.time=30d
         ports:
         - containerPort: 9090
           hostPort: 9090
